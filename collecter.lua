@@ -65,29 +65,37 @@ local drinkTea = false
 -- Skill meter
 local skillBarPos = { centre = { x = 240 // 2 + 30, y = 136 // 2 } }
 local skillBar = {
-	vec = { x = { skillBarPos.centre.x, skillBarPos.centre.x + 5, skillBarPos.centre.x + 8,
-		skillBarPos.centre.x + 5, skillBarPos.centre.x, skillBarPos.centre.x - 5,
-		skillBarPos.centre.x - 8, skillBarPos.centre.x - 5 },
+	vec = {
+		x = { skillBarPos.centre.x, skillBarPos.centre.x + 5, skillBarPos.centre.x + 8,
+			skillBarPos.centre.x + 5, skillBarPos.centre.x, skillBarPos.centre.x - 5,
+			skillBarPos.centre.x - 8, skillBarPos.centre.x - 5 },
 		y = { skillBarPos.centre.y - 8, skillBarPos.centre.y - 5, skillBarPos.centre.y, skillBarPos.centre.y + 5,
-			skillBarPos.centre.y + 8, skillBarPos.centre.y + 5, skillBarPos.centre.y, skillBarPos.centre.y - 5 } },
+			skillBarPos.centre.y + 8, skillBarPos.centre.y + 5, skillBarPos.centre.y, skillBarPos.centre.y - 5 }
+	},
 	successCheckstep = 0
 }
 local skillSlider = {
-	vec = { x = { skillBarPos.centre.x - 11, skillBarPos.centre.x - 9, skillBarPos.centre.x - 6,
-		skillBarPos.centre.x - 3, skillBarPos.centre.x, skillBarPos.centre.x + 3,
-		skillBarPos.centre.x + 6, skillBarPos.centre.x + 9, skillBarPos.centre.x + 11 },
-		y = skillBarPos.centre.y },
+	vec = {
+		x = { skillBarPos.centre.x - 11, skillBarPos.centre.x - 9, skillBarPos.centre.x - 6,
+			skillBarPos.centre.x - 3, skillBarPos.centre.x, skillBarPos.centre.x + 3,
+			skillBarPos.centre.x + 6, skillBarPos.centre.x + 9, skillBarPos.centre.x + 11 },
+		y = skillBarPos.centre.y
+	},
 	successCheckstep = 0,
 	isReverse = false
 }
 local SkillBarStep = 1
 local SkillBarhasStepped = false
 local skillBoxesPos = {
-	vec = { x = { skillBarPos.centre.x - 1, skillBarPos.centre.x + 4, skillBarPos.centre.x + 8 - 1,
-		skillBarPos.centre.x + 4, skillBarPos.centre.x - 1, skillBarPos.centre.x - 4 - 2, skillBarPos.centre.x - 8 - 1,
-		skillBarPos.centre.x - 4 - 2 },
-		y = { skillBarPos.centre.y - 8 - 1, skillBarPos.centre.y - 4 - 2, skillBarPos.centre.y - 1, skillBarPos.centre.y + 4,
-			skillBarPos.centre.y + 8 - 1, skillBarPos.centre.y + 4, skillBarPos.centre.y - 1, skillBarPos.centre.y - 4 - 2 }
+	vec = {
+		x = { skillBarPos.centre.x - 1, skillBarPos.centre.x + 4, skillBarPos.centre.x + 8 - 1,
+			skillBarPos.centre.x + 4, skillBarPos.centre.x - 1, skillBarPos.centre.x - 4 - 2,
+			skillBarPos.centre.x - 8 - 1,
+			skillBarPos.centre.x - 4 - 2 },
+		y = { skillBarPos.centre.y - 8 - 1, skillBarPos.centre.y - 4 - 2, skillBarPos.centre.y - 1,
+			skillBarPos.centre.y + 4,
+			skillBarPos.centre.y + 8 - 1, skillBarPos.centre.y + 4, skillBarPos.centre.y - 1,
+			skillBarPos.centre.y - 4 - 2 }
 	},
 	posbeenSelected = false,
 	selecXpos = nil,
@@ -215,6 +223,7 @@ function Timer()
 	timer = t // 60
 	print("Time = " .. timer, 0, 0, 2)
 end
+
 --- makes the window delay when skill checks have been successful
 local windowDelayTimer = 0
 function WindowDelay()
@@ -223,6 +232,7 @@ function WindowDelay()
 	if windowDelayTimer // 60 > 1 then
 		isPickUpScene = false
 		isBrewScene = false
+		BrewTablebeenInteracted = false
 		windowDelayTimer = 0
 		skillBar.successCheckstep = 0
 		skillSlider.successCheckstep = 0
@@ -230,6 +240,7 @@ function WindowDelay()
 	end
 	return false
 end
+
 function ResetGame()
 	brewingStage = 0
 	houseworkcost = 3
@@ -252,8 +263,9 @@ function ResetGame()
 	player.x = 240 // 2
 	player.y = 139 // 2
 end
+
 --#endregion
---#region SKILLCHECK DRAWING FUNCTIONS 
+--#region SKILLCHECK DRAWING FUNCTIONS
 
 function DrawSkillBar()
 	-- color changed on font when in the check window
@@ -283,11 +295,9 @@ function DrawSkillBar()
 	end
 	-- draws the indicater line
 	line(skillBarPos.centre.x, skillBarPos.centre.y, skillBar.vec.x[SkillBarStep], skillBar.vec.y[SkillBarStep], 3)
-
 end
 
 function DrawSkillSlider()
-
 	-- color changed on font when in the check window
 	if skillSliderBoxesPos.selecXpos == SkillBarStep then
 		rectb(skillBarPos.centre.x - 4, skillBarPos.centre.y + 12, 9, 9, 6)
@@ -347,6 +357,7 @@ function SkillBox()
 		DrawSkillBox(skillBoxesPos.selecXpos, skillBoxesPos.selecYpos, 3, 3, 0, 0)
 	end
 end
+
 function DrawSkillBox(_xPos, _yPos, _sizeX, _sizeY, _offsetX, _offsetY)
 	rect(skillBoxesPos.vec.x[_xPos] + _offsetX, skillBoxesPos.vec.y[_yPos] + _offsetY, _sizeX, _sizeY, 5)
 end
@@ -354,6 +365,7 @@ end
 function DrawSliderSkillBox(_xPos, _yPos, _sizeX, _sizeY, _offsetX, _offsetY)
 	rect(skillSliderBoxesPos.vec.x[_xPos] + _offsetX, skillSliderBoxesPos.vec.y + _offsetY, _sizeX, _sizeY, 5)
 end
+
 --#endregion
 --#region SKILLCHECK FUNCTIONS
 
@@ -361,51 +373,53 @@ function SuccessStep()
 	-- counts the successful skill checks and moves the sprites and adds to the skill check bar
 	if skillBar.successCheckstep <= 0 then
 		DrawHand(256, 240 // 2 - 40, 136 // 2 - 25, cutSceneSpr, 240 // 2 - 40, 136 // 2 + 6)
-		SetBarValue(skillCheckBar,0)
+		SetBarValue(skillCheckBar, 0)
 	elseif skillBar.successCheckstep == 1 then
 		DrawHand(256, 240 // 2 - 40, 136 // 2 - 12, cutSceneSpr, 240 // 2 - 40, 136 // 2 + 6)
-		SetBarValue(skillCheckBar,6)
+		SetBarValue(skillCheckBar, 6)
 	elseif skillBar.successCheckstep == 2 then
 		DrawHand(256, 240 // 2 - 40, 136 // 2, cutSceneSpr, 240 // 2 - 40, 136 // 2 + 6)
-		SetBarValue(skillCheckBar,12)
+		SetBarValue(skillCheckBar, 12)
 	elseif skillBar.successCheckstep == 3 then
 		DrawHand(260, 240 // 2 - 40, 136 // 2, cutSceneSpr, 240 // 2 - 40, 136 // 2 + 6)
-		SetBarValue(skillCheckBar,18)
+		SetBarValue(skillCheckBar, 18)
 	elseif skillBar.successCheckstep == 4 then
 		DrawHand(260, 240 // 2 - 40, 136 // 2 - 12, cutSceneSpr, 240 // 2 - 40, 136 // 2 + 6 - 12)
-		SetBarValue(skillCheckBar,24)
+		SetBarValue(skillCheckBar, 24)
 	elseif skillBar.successCheckstep >= 5 then
 		DrawHand(260, 240 // 2 - 40, 136 // 2 - 25, cutSceneSpr, 240 // 2 - 40, 136 // 2 + 6 - 25)
 		local p = print("Collected", 240, 136)
 		print("Collected", ((p // 2) + 240 // 2) - 75, 136 // 2 + 20, 6)
-		SetBarValue(skillCheckBar,30)
+		SetBarValue(skillCheckBar, 30)
 		if player.objHolding ~= nil then
 			Collect(player.objHolding)
 		end
 		WindowDelay()
 	end
 end
+
 function SuccessStepSlider()
 	-- counts the successful skill checks and moves the sprites and adds to the skill check bar
 	if skillSlider.successCheckstep <= 0 then
-		SetBarValue(skillCheckBar,0)
+		SetBarValue(skillCheckBar, 0)
 	elseif skillSlider.successCheckstep == 1 then
-		SetBarValue(skillCheckBar,6)
+		SetBarValue(skillCheckBar, 6)
 	elseif skillSlider.successCheckstep == 2 then
-		SetBarValue(skillCheckBar,12)
+		SetBarValue(skillCheckBar, 12)
 	elseif skillSlider.successCheckstep == 3 then
-		SetBarValue(skillCheckBar,18)
+		SetBarValue(skillCheckBar, 18)
 	elseif skillSlider.successCheckstep == 4 then
-		SetBarValue(skillCheckBar,24)
+		SetBarValue(skillCheckBar, 24)
 	elseif skillSlider.successCheckstep >= 5 then
-		SetBarValue(skillCheckBar,30)
+		SetBarValue(skillCheckBar, 30)
 		--if player.objHolding ~= nil then
 		--	Collect(player.objHolding)
 		WindowDelay()
-		end
-		
+	end
+
 	--end
 end
+
 function SuccessCheck()
 	-- check if skill check is in box area for success check
 
@@ -428,6 +442,7 @@ function SuccessCheck()
 		end
 	end
 end
+
 function SuccessCheckSlider()
 	-- check if skill check is in box area for success check
 
@@ -450,13 +465,15 @@ function SuccessCheckSlider()
 		end
 	end
 end
+
 --#endregion
 --#region BAR FUNCTIONS
 ---Skill fill bar ---------------------------------------------------------
 function SkillBar()
-	rectb(skillBarPos.centre.x - skillCheckBar.barWidth//2, skillBarPos.centre.y - 20, skillCheckBar.barWidth, 6, 12)
-	DrawBarFill(skillCheckBar, 6, skillBarPos.centre.x - skillCheckBar.barWidth//2 + 1,skillBarPos.centre.y - 20 + 1 )
+	rectb(skillBarPos.centre.x - skillCheckBar.barWidth // 2, skillBarPos.centre.y - 20, skillCheckBar.barWidth, 6, 12)
+	DrawBarFill(skillCheckBar, 6, skillBarPos.centre.x - skillCheckBar.barWidth // 2 + 1, skillBarPos.centre.y - 20 + 1)
 end
+
 -- tea bar-----------------------------------------------------------------
 function TeaBar()
 	local p = print("Tea = ", 0, 140)
@@ -472,11 +489,13 @@ function HouseWorkBar()
 	rectb(240 - hWBar.barWidth, 0, hWBar.barWidth, 6, 12)
 	DrawBarFill(hWBar, 2, 240 - hWBar.barWidth + 1, 1)
 end
-function SetBarValue(_bar,value)
+
+function SetBarValue(_bar, value)
 	_bar.currentFillValue = value
 	if value >= _bar.maxValue then _bar.currentFillValue = _bar.maxValue end
 	if value <= 0 then _bar.currentFillValue = 0 end
 end
+
 function AddToBar(_bar, value)
 	_bar.currentFillValue = _bar.currentFillValue + value
 	if _bar.currentFillValue >= _bar.maxValue then
@@ -498,6 +517,7 @@ end
 function DrawBarFill(_Bar, _color, _xloc, _yloc)
 	rect(_xloc, _yloc, _Bar.currentFillValue, _Bar.fillThickness, _color)
 end
+
 --#endregion
 --#region PLAYER FUNCTIONS
 
@@ -532,14 +552,22 @@ end
 
 function AttemptPickUp(obj)
 	if Collision(player.x, player.y, 8, obj.x, obj.y, 8, 8) then
-		if obj.iswork ~= true and player.objHolding == nil then
-			player.objHolding = obj
-			cutSceneSpr = obj.cutscenespr
-			isPickUpScene = true
+		InteractPrompt()
+		if btnp(4) then
+			if obj.iswork ~= true and player.objHolding == nil then
+				player.objHolding = obj
+				cutSceneSpr = obj.cutscenespr
+				isPickUpScene = true
+			end
+		else
+			if player.objHolding == obj then player.objHolding = nil end
 		end
-	else
-		if player.objHolding == obj then player.objHolding = nil end
 	end
+end
+
+function InteractPrompt()
+	rectb(player.x - 1, player.y + 15, 9, 9, 6)
+	print("Z", player.x + 1, player.y + 17, 6)
 end
 
 function Collect(obj)
@@ -552,13 +580,13 @@ end
 -- checks to see is you have approched the brewing table so you dont interact with it every frame
 function IsAtTable()
 	if Collision(player.x, player.y, 8, workTop.x, workTop.y, workTop.pixsizeX, workTop.pixsizeY) then
-		if BrewTablebeenInteracted == false then
-			isBrewScene = true
-			BrewTablebeenInteracted = true
+		InteractPrompt()
+		if btnp(4) then
+			if BrewTablebeenInteracted == false then
+				isBrewScene = true
+				BrewTablebeenInteracted = true
+			end
 		end
-	else
-		BrewTablebeenInteracted = false
-		isBrewScene = false
 	end
 end
 
@@ -610,7 +638,8 @@ function ObjMove(obj)
 		obj.x = obj.x - obj.s / 2
 	end
 end
--- sets the object offscreen when called so it cant be seen 
+
+-- sets the object offscreen when called so it cant be seen
 function ResetObj(_obj)
 	_obj.x = 240 // 2
 	_obj.y = 140
@@ -654,6 +683,7 @@ function HitItemWhileMoving(_mo, _so, _soSizeX, _soSizeY)
 		return false
 	end
 end
+
 --#endregion
 --#region GAMEOBJECT DRAW FUNCTIONS
 --- Draw functions----------------------------------------------------------------
@@ -700,6 +730,7 @@ end
 function DrawWorkTop()
 	DrawObj(workTop.sprite, workTop.x, workTop.y, 4, 2)
 end
+
 --#endregion
 --#region WASHING MACHINE FUNCTIONS
 ---Washing machine functions------------------------------------------------------
@@ -740,6 +771,7 @@ function SpitLaundry(_wMachine)
 		end
 	end
 end
+
 --#endregion
 --#region POST FUNCTIONS
 --Post functions ----------------------------------------------------------------------
@@ -790,6 +822,7 @@ function SpitPost()
 		end
 	end
 end
+
 --#endregion
 --#region SINK FUNCTIONS
 ------------Sink functions -----------------------------------------------------------------------------
@@ -818,6 +851,7 @@ function SpitWashingUp()
 		end
 	end
 end
+
 --#endregion
 --#region POPUP WINDOW FUNCTIONS
 ---------------------------cut Scene------------------------------------------------------
@@ -840,7 +874,6 @@ function DrawCutWindow()
 	-- text print
 	local p = print("Progress Check", 0, 140)
 	print("Progress Check", 239 // 2 - p // 2, 136 // 2 - 136 // 4 + 3, 12)
-	local z = print("Press Z", 0, 140)
 	local x = print("X to exit", 0, 140)
 	print("X to exit", skillBarPos.centre.x - x // 2, 136 // 2 + 37, 14)
 	rectb(skillBarPos.centre.x - x // 2 - 2, 136 // 2 + 35, 9, 9, 14)
@@ -859,6 +892,7 @@ function SkillCheckSequanceCircle()
 	SuccessStep()
 	SkillBar()
 end
+
 function SkillCheckSequanceSlider()
 	DrawSkillSlider()
 	SkillSliderBox()
@@ -866,6 +900,7 @@ function SkillCheckSequanceSlider()
 	SuccessStepSlider()
 	SkillBar()
 end
+
 function BrewProgress(_timer)
 	if brewingStage == 1 then
 		SkillCheckSequanceSlider()
@@ -980,8 +1015,10 @@ end
 
 function CancelBrewingScene()
 	isBrewScene = false
+	BrewTablebeenInteracted = false
 	skillBar.successCheckstep = 0
 end
+
 --#endregion
 --#region GAME LOOP
 ------The Games Game Loop ----------------------------------------------------------------------------
@@ -1077,8 +1114,8 @@ function MainGameLoop()
 		mgr:active("end")
 	end
 end
---#endregion
 
+--#endregio
 --#region SCENES
 
 --------Scenes -----------------------------------------------------------------------------
@@ -1180,6 +1217,7 @@ function End()
 
 	return s
 end
+
 --#endregion
 -----------------------------------------------------------------------------------------
 --********************* MAIN ************************************************************
@@ -1190,11 +1228,15 @@ mgr:add(Test(), "test")
 mgr:add(End(), "end")
 mgr:active("title")
 
+-- TIC is called at 60fps-----
 function TIC()
 	mgr:draw()
 end
+
 --*********************MAIN END **********************************************************
 ------------------------------------------------------------------------------------------
+
+--#region TILES, SPRITES, MAP AND SOUND DATA USED BY TIC-80
 -- <TILES>
 -- 001:00eeee000e4444000e4c4c0004444400034443004033304000eee00000e0e000
 -- 002:0eeeee000444440004c4c40004444400034443004033304000eee00000e0e000
@@ -1682,4 +1724,4 @@ end
 -- <PALETTE2>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE2>
-
+--#endregion
