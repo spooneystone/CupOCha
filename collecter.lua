@@ -62,6 +62,10 @@ local BrewTablebeenInteracted = false
 local cutSceneSpr = 320
 local brewCompleted = false
 local drinkTea = false
+-- dash bar 
+local dashed = false
+local isfilling = false
+
 -- Skill meter
 local skillBarPos = { centre = { x = 240 // 2 + 30, y = 136 // 2 } }
 local skillBar = {
@@ -110,10 +114,10 @@ local skillSliderBoxesPos = {
 -- Skill check bar
 local skillCheckBar = { barWidth = 32, fillThickness = 4, currentFillValue = 0, maxValue = 30, isfull = false }
 -- tea bar
-local teaBar = { barWidth = 32, fillThickness = 4, currentFillValue = 0, maxValue = 30, isfull = false }
+local dashBar = { barWidth = 32, fillThickness = 4, currentFillValue = 30, maxValue = 30, isfull = false }
 --house work bar
 local hWBar = { barWidth = 32, fillThickness = 4, currentFillValue = 0, maxValue = 30, isfull = false }
-local player = { sprite = 1, x = 240 // 2, y = 139 // 2, s = 1, objHolding = nil }
+local player = { sprite = 1, x = 240 // 2, y = 139 // 2, s = 1, dashTimer = 0, dashDelayT = 0, objHolding = nil }
 --tea items
 
 local teabag = { sprite = 17, x = 240 // 3, y = 140 // 2, collected = false, iswork = false, cutscenespr = 320 }
@@ -474,12 +478,12 @@ function SkillBar()
 	DrawBarFill(skillCheckBar, 6, skillBarPos.centre.x - skillCheckBar.barWidth // 2 + 1, skillBarPos.centre.y - 20 + 1)
 end
 
--- tea bar-----------------------------------------------------------------
-function TeaBar()
-	local p = print("Tea = ", 0, 140)
-	print("Tea = ", 0, borderBox.bottom + bordersize + 1, 12)
-	rectb(p, borderBox.bottom + bordersize + 1, teaBar.barWidth, 6, 12)
-	DrawBarFill(teaBar, 6, skillBar.successCheckstep, borderBox.bottom + bordersize + 2)
+-- Dash bar-----------------------------------------------------------------
+function DashBar()
+	local p = print("Dash = ", 0, 140)
+	print("Dash = ", 0, borderBox.bottom + bordersize + 1, 12)
+	rectb(p, borderBox.bottom + bordersize + 1, dashBar.barWidth, 6, 12)
+	DrawBarFill(dashBar, 10, dashBar.barWidth + 5, borderBox.bottom + bordersize + 2)
 end
 
 ---- housework bar ------------------------------------------------------
@@ -535,6 +539,8 @@ function DrawPlayer()
 end
 
 function PlayerMove()
+	Dash()
+
 	if isPickUpScene == true or isBrewScene == true then return end
 	--up and down movement
 	if btn(0) and BorderHit(borderBox.top, player.y) == false then
@@ -547,6 +553,44 @@ function PlayerMove()
 		player.x = player.x - player.s
 	elseif btn(3) and BorderHit(borderBox.right, player.x + 8) == false then
 		player.x = player.x + player.s
+	end
+end
+
+-- makes player dash
+function Dash()
+	--activates the dash action
+	if btnp(6) and dashBar.currentFillValue ~= 0 and isfilling == false then dashed = true end
+
+	--if the bar is empty this will activate it to start filling up
+	if dashBar.currentFillValue == 0 then
+		isfilling = true
+	end
+
+	-- fills the bar back up and stops when gets full
+	if isfilling then
+		AddToBar(dashBar,0.2)
+		if dashBar.currentFillValue == 30 then
+			isfilling = false
+		end
+	end
+
+	-- when dashed this is executed,,,, dashes and has a delay for next dash.
+	if dashed then
+		if player.dashTimer // 11 < 1 then
+			player.s = 3
+			player.dashTimer = player.dashTimer + 1
+			player.dashDelayT = 0
+			if player.dashTimer < 2 then MinusBar(dashBar,10) end
+			
+		else
+			player.s = 1
+			player.dashDelayT = player.dashDelayT + 1
+			if player.dashDelayT // 11 >= 1  then
+				player.dashTimer = 0
+				dashed = false
+				
+			end
+		end
 	end
 end
 
@@ -1026,7 +1070,7 @@ function MainGameLoop()
 	cls(0)
 	Border(bordersize, 9)
 	HouseWorkBar()
-	TeaBar()
+	DashBar()
 	t = t + 1
 	PlayerMove()
 	Timer()
@@ -1160,9 +1204,9 @@ function Game()
 
 	function s:draw()
 		MainGameLoop()
-		if btnp(6) then
-			mgr:active("title")
-		end
+		--if btnp(6) then
+		--	mgr:active("title")
+		--end
 	end
 
 	return s
@@ -1724,4 +1768,4 @@ end
 -- <PALETTE2>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE2>
---#endregion
+
