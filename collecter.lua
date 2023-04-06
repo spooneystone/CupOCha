@@ -10,6 +10,7 @@
 --#region SCENE MANAGER
 
 
+
 ------------------------- scene manager -------------------------------------------------
 function SceneManager()
 	local s = {}
@@ -62,7 +63,7 @@ local BrewTablebeenInteracted = false
 local cutSceneSpr = 320
 local brewCompleted = false
 local drinkTea = false
--- dash bar 
+-- dash bar
 local dashed = false
 local isfilling = false
 
@@ -568,7 +569,7 @@ function Dash()
 
 	-- fills the bar back up and stops when gets full
 	if isfilling then
-		AddToBar(dashBar,0.2)
+		AddToBar(dashBar, 0.2)
 		if dashBar.currentFillValue == 30 then
 			isfilling = false
 		end
@@ -580,15 +581,13 @@ function Dash()
 			player.s = 3
 			player.dashTimer = player.dashTimer + 1
 			player.dashDelayT = 0
-			if player.dashTimer < 2 then MinusBar(dashBar,10) end
-			
+			if player.dashTimer < 2 then MinusBar(dashBar, 10) end
 		else
 			player.s = 1
 			player.dashDelayT = player.dashDelayT + 1
-			if player.dashDelayT // 11 >= 1  then
+			if player.dashDelayT // 11 >= 1 then
 				player.dashTimer = 0
 				dashed = false
-				
 			end
 		end
 	end
@@ -1162,6 +1161,7 @@ end
 --#endregio
 --#region SCENES
 
+
 --------Scenes -----------------------------------------------------------------------------
 function Title()
 	local s = {}
@@ -1242,6 +1242,7 @@ function End()
 	function s:onActive() -- optional
 		sync(1, 2)
 		ti = 0
+		SaveScore(timer)
 	end
 
 	function s:update()
@@ -1250,16 +1251,88 @@ function End()
 
 	function s:draw()
 		cls()
-		spr(0, 56, 5, -1, 1, 0, 0, 16, 16)
+		spr(0, 56, -3, -1, 1, 0, 0, 16, 16)
 		ti = ti + 1
 		local p = print("Enjoy your tea", 240, 136)
 		print("Enjoy your tea", (240 // 2 - p // 2), 136 // 2 - 20 + math.sin(ti // 5 - 10) * 2, 1)
-		if ti // 60 >= 10 then
+		local w = print("Press z to skip", 240, 136)
+		print("Press z to skip", (240 // 2 - w // 2), 136 - 8, 14)
+		if ti // 60 >= 10 or btnp(4) then
+			mgr:active("highscores")
+		end
+	end
+
+	return s
+end
+
+----- leaderboard scene -----------------------------
+function HighScores()
+	local s = {}
+	local ti = 0
+	function s:onActive() -- optional
+		sync(1, 0)
+		ti = 0
+	end
+
+	function s:update()
+
+	end
+
+	function s:draw()
+		cls()
+		ti = ti + 1
+		LeaderBoard()
+		if ti // 60 >= 10 or btnp(4) then
 			mgr:active("title")
 		end
 	end
 
 	return s
+end
+
+--#endregion
+--#region leaderboard
+
+function SaveScore(_score)
+	for i = 0, 10, 1 do
+		if pmem(i) == 0 then
+			pmem(i, _score)
+			do return end
+		end
+	end
+	for i = 0, 10, 1 do
+		if pmem(i) <= _score then
+			pmem(i, _score)
+			do return end
+		end
+	end
+end
+
+function LeaderBoard()
+	local scoreHolder = {}
+	for i = 0, 10, 1 do
+		if pmem(i) > 0 then
+			table.insert(scoreHolder, pmem(i))
+		end
+	end
+	table.sort(scoreHolder, function(a, b) return a > b end)
+	rect((240 - 150) // 2, (136 - 115) // 2, 150, 115, 8)
+	local message = "HighScores"
+	local width = print(message, 0, -6)
+	print(message, (240 - width * 2) // 2, (136 - 105) // 2, 3, false, 2)
+
+
+	for i = #scoreHolder, 1, -1 do
+		local message = scoreHolder[i]
+		local width = print(message.." secs", 0, -6)
+		print(message.." secs", (240 - width) // 2, (136 - 105) // 2 + 15 + (7 * i), 13, false)
+		local message = i .. "."
+		local width = print(message, 0, -6)
+		print(message, (240 - width) // 2 - 40, (136 - 105) // 2 + 15 + (7 * i), 13, false)
+	end
+	-- prints skip option
+	local w = print("Press z to skip", 240, 136)
+	print("Press z to skip", (240 // 2 - w // 2), 136 - 8, 14)
 end
 
 --#endregion
@@ -1270,7 +1343,8 @@ mgr:add(Title(), "title")
 mgr:add(Game(), "game")
 mgr:add(Test(), "test")
 mgr:add(End(), "end")
-mgr:active("title")
+mgr:add(HighScores(), "highscores")
+mgr:active("end")
 
 -- TIC is called at 60fps-----
 function TIC()
@@ -1769,3 +1843,4 @@ end
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE2>
 
+--#endregion
