@@ -57,12 +57,14 @@ local borderBox = {
 }
 local brewingStage = 0
 local houseworkcost = 3
+local houseWorkMultiplyer = 1
 local isPickUpScene = false
 local isBrewScene = false
 local BrewTablebeenInteracted = false
 local cutSceneSpr = 320
 local brewCompleted = false
 local drinkTea = false
+local cutWindowOpenTime = 0
 -- dash bar
 local dashed = false
 local isfilling = false
@@ -144,7 +146,7 @@ local postDoor = {
 	s = 0.5,
 	mDown = false,
 	mLeft = false,
-	spittime = 13,
+	spittime = 12,
 	hasSpit = true,
 	iswork = false,
 	pixsizeX = 11,
@@ -241,9 +243,22 @@ function WindowDelay()
 		windowDelayTimer = 0
 		skillBar.successCheckstep = 0
 		skillSlider.successCheckstep = 0
+		cutWindowOpenTime = 0
 		return true
 	end
 	return false
+end
+
+function SkillCheckMultiplyer()
+	if cutWindowOpenTime < 2 then
+		houseWorkMultiplyer = 1
+	elseif cutWindowOpenTime == 6 then
+		houseWorkMultiplyer = 2
+	elseif cutWindowOpenTime == 10 then
+		houseWorkMultiplyer = 3
+	elseif cutWindowOpenTime == 15 then
+		houseWorkMultiplyer = 4
+	end
 end
 
 function ResetGame()
@@ -493,6 +508,10 @@ function HouseWorkBar()
 	print("HouseWork = ", 240 - hWBar.barWidth - p, 0, 12)
 	rectb(240 - hWBar.barWidth, 0, hWBar.barWidth, 6, 12)
 	DrawBarFill(hWBar, 2, 240 - hWBar.barWidth + 1, 1)
+
+	if hWBar.currentFillValue == hWBar.maxValue then
+		WindowDelay()
+	end
 end
 
 function SetBarValue(_bar, value)
@@ -563,17 +582,18 @@ function Dash()
 	if btnp(6) and dashBar.currentFillValue ~= 0 and isfilling == false then dashed = true end
 
 	--if the bar is empty this will activate it to start filling up
-	if dashBar.currentFillValue == 0 then
+	if dashBar.currentFillValue < 30 then
 		isfilling = true
 	end
 
 	-- fills the bar back up and stops when gets full
 	if isfilling then
-		AddToBar(dashBar, 0.2)
+		AddToBar(dashBar, 0.8)
 		if dashBar.currentFillValue == 30 then
 			isfilling = false
 		end
 	end
+
 
 	-- when dashed this is executed,,,, dashes and has a delay for next dash.
 	if dashed then
@@ -581,11 +601,11 @@ function Dash()
 			player.s = 3
 			player.dashTimer = player.dashTimer + 1
 			player.dashDelayT = 0
-			if player.dashTimer < 2 then MinusBar(dashBar, 10) end
+			if player.dashTimer < 2 then MinusBar(dashBar, 30) end
 		else
 			player.s = 1
 			player.dashDelayT = player.dashDelayT + 1
-			if player.dashDelayT // 11 >= 1 then
+			if player.dashDelayT >= 2 then
 				player.dashTimer = 0
 				dashed = false
 			end
@@ -780,7 +800,7 @@ end
 function WMachineFire()
 	-- fires out laundry at every spittime
 	if hWBar.isfull == false then
-		if timer % wMachine.spittime == 0 then
+		if timer % (wMachine.spittime // houseWorkMultiplyer) == 0 then
 			SpitLaundry(wMachine)
 		else
 			wMachine.hasSpit = false
@@ -820,7 +840,7 @@ end
 --Post functions ----------------------------------------------------------------------
 function PostFire()
 	if hWBar.isfull == false then
-		if timer % postDoor.spittime == 0 then
+		if timer % (postDoor.spittime // houseWorkMultiplyer) == 0 then
 			SpitPost()
 		else
 			postDoor.hasSpit = false
@@ -871,7 +891,7 @@ end
 ------------Sink functions -----------------------------------------------------------------------------
 function CreateWashingUp()
 	if hWBar.isfull == false then
-		if timer % sink.spittime == 0 then
+		if timer % (sink.spittime // houseWorkMultiplyer) == 0 then
 			SpitWashingUp()
 		else
 			sink.hasSpit = false
@@ -900,6 +920,8 @@ end
 ---------------------------cut Scene------------------------------------------------------
 
 function DrawCutWindow()
+	cutWindowOpenTime = cutWindowOpenTime + 1
+
 	local xindent = 239 // 4
 	local yindent = 136 // 4
 
@@ -929,19 +951,29 @@ end
 
 function SkillCheckSequanceCircle()
 	DrawCutWindow()
-	DrawSkillBar()
-	SkillBox()
-	SuccessCheck()
-	SuccessStep()
-	SkillBar()
+	if hWBar.currentFillValue < hWBar.maxValue then
+		DrawSkillBar()
+		SkillBox()
+		SuccessCheck()
+		SuccessStep()
+		SkillBar()
+	else
+		local p = print("Failed", 240, 136)
+		print("Failed", ((p // 2) + 240 // 2), 136 // 2, 2)
+	end
 end
 
 function SkillCheckSequanceSlider()
-	DrawSkillSlider()
-	SkillSliderBox()
-	SuccessCheckSlider()
-	SuccessStepSlider()
-	SkillBar()
+	if hWBar.currentFillValue < hWBar.maxValue then
+		DrawSkillSlider()
+		SkillSliderBox()
+		SuccessCheckSlider()
+		SuccessStepSlider()
+		SkillBar()
+	else
+		local p = print("Failed", 240, 136)
+		print("Failed", ((p // 2) + 240 // 2), 136 // 2, 2)
+	end
 end
 
 function BrewProgress(_timer)
@@ -1054,12 +1086,16 @@ end
 function CancelPickUpScene()
 	isPickUpScene = false
 	skillBar.successCheckstep = 0
+	cutWindowOpenTime = 0
+	windowDelayTimer = 0
 end
 
 function CancelBrewingScene()
 	isBrewScene = false
 	BrewTablebeenInteracted = false
 	skillBar.successCheckstep = 0
+	cutWindowOpenTime = 0
+	windowDelayTimer = 0
 end
 
 --#endregion
@@ -1137,6 +1173,7 @@ function MainGameLoop()
 		PostFire()
 		CreateWashingUp()
 	end
+	SkillCheckMultiplyer()
 	DrawPlayer()
 
 	--- cut scene skill checks ------
@@ -1156,6 +1193,8 @@ function MainGameLoop()
 	if drinkTea == true then
 		mgr:active("end")
 	end
+
+	print(cutWindowOpenTime // 60, 20, 20, 3)
 end
 
 --#endregio
@@ -1324,8 +1363,8 @@ function LeaderBoard()
 
 	for i = #scoreHolder, 1, -1 do
 		local message = scoreHolder[i]
-		local width = print(message.." secs", 0, -6)
-		print(message.." secs", (240 - width) // 2, (136 - 105) // 2 + 15 + (7 * i), 13, false)
+		local width = print(message .. " secs", 0, -6)
+		print(message .. " secs", (240 - width) // 2, (136 - 105) // 2 + 15 + (7 * i), 13, false)
 		local message = i .. "."
 		local width = print(message, 0, -6)
 		print(message, (240 - width) // 2 - 40, (136 - 105) // 2 + 15 + (7 * i), 13, false)
@@ -1344,7 +1383,7 @@ mgr:add(Game(), "game")
 mgr:add(Test(), "test")
 mgr:add(End(), "end")
 mgr:add(HighScores(), "highscores")
-mgr:active("end")
+mgr:active("title")
 
 -- TIC is called at 60fps-----
 function TIC()
@@ -1842,5 +1881,3 @@ end
 -- <PALETTE2>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE2>
-
---#endregion
