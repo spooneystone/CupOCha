@@ -63,8 +63,10 @@ local isBrewScene = false
 local BrewTablebeenInteracted = false
 local cutSceneSpr = 320
 local brewCompleted = false
-local drinkTea = false
+local finishGame = false
+local toBrewScene = false
 local cutWindowOpenTime = 0
+local interactPrompt = false
 -- dash bar
 local dashed = false
 local isfilling = false
@@ -233,10 +235,10 @@ end
 
 --- makes the window delay when skill checks have been successful
 local windowDelayTimer = 0
-function WindowDelay()
+function WindowDelay(secs)
 	windowDelayTimer = windowDelayTimer + 1
-
-	if windowDelayTimer // 60 > 1 then
+	print(windowDelayTimer, 20, 20, 3)
+	if windowDelayTimer / 60 % secs == 0 then
 		isPickUpScene = false
 		isBrewScene = false
 		BrewTablebeenInteracted = false
@@ -248,16 +250,12 @@ function WindowDelay()
 	end
 	return false
 end
-
+-- increases housework creation speed based on how long window is open
 function SkillCheckMultiplyer()
 	if cutWindowOpenTime < 2 then
 		houseWorkMultiplyer = 1
-	elseif cutWindowOpenTime == 6 then
-		houseWorkMultiplyer = 2
 	elseif cutWindowOpenTime == 10 then
-		houseWorkMultiplyer = 3
-	elseif cutWindowOpenTime == 15 then
-		houseWorkMultiplyer = 4
+		houseWorkMultiplyer = 2
 	end
 end
 
@@ -268,7 +266,8 @@ function ResetGame()
 	isBrewScene = false
 	BrewTablebeenInteracted = false
 	brewCompleted = false
-	drinkTea = false
+	finishGame = false
+	toBrewScene = false
 	t = 0
 	timer = 0
 	teabag.collected = false
@@ -309,7 +308,7 @@ function DrawSkillBar()
 			if SkillBarStep > 8 then
 				SkillBarStep = 1
 			end
-		elseif t % 20.0 ~= 0.0 and SkillBarhasStepped == true then
+		elseif t % 10.0 ~= 0.0 and SkillBarhasStepped == true then
 			SkillBarhasStepped = false
 		end
 	end
@@ -331,7 +330,7 @@ function DrawSkillSlider()
 	local steps = #skillSlider.vec.x
 	if skillSlider.successCheckstep < 5 then
 		---tick actions for skill bar
-		if t % 10.0 == 0.0 and SkillBarhasStepped == false then
+		if t % 8.0 == 0.0 and SkillBarhasStepped == false then
 			SkillBarhasStepped = true
 			if SkillBarStep == steps then
 				skillSlider.isReverse = true
@@ -343,7 +342,7 @@ function DrawSkillSlider()
 			else
 				SkillBarStep = SkillBarStep + 1
 			end
-		elseif t % 20.0 ~= 0.0 and SkillBarhasStepped == true then
+		elseif t % 8.0 ~= 0.0 and SkillBarhasStepped == true then
 			SkillBarhasStepped = false
 		end
 	end
@@ -414,7 +413,7 @@ function SuccessStep()
 		if player.objHolding ~= nil then
 			Collect(player.objHolding)
 		end
-		WindowDelay()
+		WindowDelay(2)
 	end
 end
 
@@ -434,7 +433,7 @@ function SuccessStepSlider()
 		SetBarValue(skillCheckBar, 30)
 		--if player.objHolding ~= nil then
 		--	Collect(player.objHolding)
-		WindowDelay()
+		WindowDelay(2)
 	end
 
 	--end
@@ -509,9 +508,7 @@ function HouseWorkBar()
 	rectb(240 - hWBar.barWidth, 0, hWBar.barWidth, 6, 12)
 	DrawBarFill(hWBar, 2, 240 - hWBar.barWidth + 1, 1)
 
-	if hWBar.currentFillValue == hWBar.maxValue then
-		WindowDelay()
-	end
+	
 end
 
 function SetBarValue(_bar, value)
@@ -615,8 +612,8 @@ end
 
 function AttemptPickUp(obj)
 	if Collision(player.x, player.y, 8, obj.x, obj.y, 8, 8) then
-		InteractPrompt()
-		if btnp(4) then
+		
+		if btnp(4,60,6) then
 			if obj.iswork ~= true and player.objHolding == nil then
 				player.objHolding = obj
 				cutSceneSpr = obj.cutscenespr
@@ -625,6 +622,7 @@ function AttemptPickUp(obj)
 		else
 			if player.objHolding == obj then player.objHolding = nil end
 		end
+		return true
 	end
 end
 
@@ -643,13 +641,14 @@ end
 -- checks to see is you have approched the brewing table so you dont interact with it every frame
 function IsAtTable()
 	if Collision(player.x, player.y, 8, workTop.x, workTop.y, workTop.pixsizeX, workTop.pixsizeY) then
-		InteractPrompt()
-		if btnp(4) then
+		
+		if btnp(4,60,6) then
 			if BrewTablebeenInteracted == false then
 				isBrewScene = true
 				BrewTablebeenInteracted = true
 			end
 		end
+		return true
 	end
 end
 
@@ -942,6 +941,10 @@ function DrawCutWindow()
 	local x = print("X to exit", 0, 140)
 	print("X to exit", skillBarPos.centre.x - x // 2, 136 // 2 + 37, 14)
 	rectb(skillBarPos.centre.x - x // 2 - 2, 136 // 2 + 35, 9, 9, 14)
+
+	if hWBar.currentFillValue == hWBar.maxValue then
+		WindowDelay(2)
+	end
 end
 
 function DrawHand(_handspr, _hxPos, _hyPos, _itemspr, _ixPos, _iyPos)
@@ -985,7 +988,7 @@ function BrewProgress(_timer)
 			local p = print("Poured", 240, 136)
 			print("Poured", ((p // 2) + 240 // 2) - 70, 136 // 2 + 20, 6)
 
-			if WindowDelay() == true then
+			if WindowDelay(2) == true then
 				brewingStage = 2
 			end
 		else
@@ -1008,7 +1011,7 @@ function BrewProgress(_timer)
 			local p = print("Stirred", 240, 136)
 			print("Stirred", ((p // 2) + 240 // 2) - 70, 136 // 2 + 20, 6)
 
-			if WindowDelay() == true then
+			if WindowDelay(2) == true then
 				brewingStage = 3
 			end
 		else
@@ -1048,8 +1051,10 @@ function BrewProgress(_timer)
 		else
 			local p = print("You Have Won", 240, 136)
 			print("You Have Won", (240 // 2 - p // 2), 136 // 2 - 20, 6)
-			if _timer / 60 % 4 == 0 then
-				drinkTea = true
+			finishGame = true
+			if WindowDelay(4) then
+				toBrewScene = true
+				
 			end
 		end
 		return
@@ -1073,9 +1078,6 @@ function BrewProgress(_timer)
 	elseif cup.collected == true and teabag.collected == true and kettle.collected == true then
 		brewingStage = 1
 	end
-
-	--SkillSliderBox()
-	--DrawSkillSlider()
 end
 
 function DrawBrewingSequance()
@@ -1109,9 +1111,7 @@ function MainGameLoop()
 	t = t + 1
 	PlayerMove()
 	Timer()
-	AttemptPickUp(teabag)
-	AttemptPickUp(kettle)
-	AttemptPickUp(cup)
+
 	for i = 1, #laundrys do
 		Collect(laundrys[i])
 	end
@@ -1124,7 +1124,7 @@ function MainGameLoop()
 
 	ObjMove(wMachine)
 	DrawWorkTop()
-	IsAtTable()
+
 	if teabag.collected == false then
 		DrawTeaBag()
 	elseif teabag.collected == true then
@@ -1145,6 +1145,8 @@ function MainGameLoop()
 	DrawDoor()
 	DrawWMachine()
 	PostMove()
+
+	if interactPrompt == true then InteractPrompt() end
 
 	for i = 1, #laundrys do
 		if laundrys[i].collected == false then
@@ -1179,22 +1181,34 @@ function MainGameLoop()
 	--- cut scene skill checks ------
 	if isPickUpScene == true then
 		SkillCheckSequanceCircle()
-		if btnp(5) then
+		if btnp(5) and finishGame == false then
 			CancelPickUpScene()
 		end
 	end
 	if isBrewScene == true then
 		DrawBrewingSequance()
-		if btnp(5) then
-			CancelBrewingScene()
+		if finishGame == false then
+			if btnp(5) then
+				CancelBrewingScene()
+			end
 		end
 	end
+
+	if AttemptPickUp(teabag) or AttemptPickUp(kettle) or AttemptPickUp(cup) or IsAtTable() then
+		interactPrompt = true
+	else
+		interactPrompt = false
+	end
+	
+	
+	
+	
 	--- if game is won ------
-	if drinkTea == true then
+	if toBrewScene == true then
 		mgr:active("end")
 	end
 
-	print(cutWindowOpenTime // 60, 20, 20, 3)
+	--print(cutWindowOpenTime // 60, 20, 20, 3)
 end
 
 --#endregio
@@ -1330,7 +1344,7 @@ function HighScores()
 end
 
 --#endregion
---#region leaderboard
+--#region LEADERBOARD
 
 function SaveScore(_score)
 	for i = 0, 10, 1 do
@@ -1354,7 +1368,7 @@ function LeaderBoard()
 			table.insert(scoreHolder, pmem(i))
 		end
 	end
-	table.sort(scoreHolder, function(a, b) return a > b end)
+	table.sort(scoreHolder, function(a, b) return a < b end)
 	rect((240 - 150) // 2, (136 - 115) // 2, 150, 115, 8)
 	local message = "HighScores"
 	local width = print(message, 0, -6)
@@ -1881,3 +1895,4 @@ end
 -- <PALETTE2>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE2>
+
