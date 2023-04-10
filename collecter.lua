@@ -182,7 +182,7 @@ local workTop = {
 -- collecteable house items
 local washingUp = {}
 for i = 1, 8 do
-	local wUp = { sprite = math.random(51, 52), x = 240 // 2, y = 140, collected = false, dropped = false, iswork = true }
+	local wUp = { sprite = math.random(51, 52), x = 240 // 2, y = 140, collected = false, dropped = false, iswork = true,moveSteps= 0, postDistance = { x = math.random(5, 38), y = math.random(1, 5) }}
 	table.insert(washingUp, wUp)
 end
 local laundrys = {}
@@ -207,7 +207,7 @@ for i = 1, 8 do
 		dropped = false,
 		iswork = true,
 		moveSteps = 0,
-		postDistance = math.random(5, 20)
+		postDistance = { x = math.random(5, 38), y = math.random(1, 5) }
 	}
 	table.insert(posts, post)
 end
@@ -250,6 +250,7 @@ function WindowDelay(secs)
 	end
 	return false
 end
+
 -- increases housework creation speed based on how long window is open
 function SkillCheckMultiplyer()
 	if cutWindowOpenTime < 2 then
@@ -507,8 +508,6 @@ function HouseWorkBar()
 	print("HouseWork = ", 240 - hWBar.barWidth - p, 0, 12)
 	rectb(240 - hWBar.barWidth, 0, hWBar.barWidth, 6, 12)
 	DrawBarFill(hWBar, 2, 240 - hWBar.barWidth + 1, 1)
-
-	
 end
 
 function SetBarValue(_bar, value)
@@ -612,8 +611,7 @@ end
 
 function AttemptPickUp(obj)
 	if Collision(player.x, player.y, 8, obj.x, obj.y, 8, 8) then
-		
-		if btnp(4,60,6) then
+		if btnp(4, 60, 6) then
 			if obj.iswork ~= true and player.objHolding == nil then
 				player.objHolding = obj
 				cutSceneSpr = obj.cutscenespr
@@ -641,8 +639,7 @@ end
 -- checks to see is you have approched the brewing table so you dont interact with it every frame
 function IsAtTable()
 	if Collision(player.x, player.y, 8, workTop.x, workTop.y, workTop.pixsizeX, workTop.pixsizeY) then
-		
-		if btnp(4,60,6) then
+		if btnp(4, 60, 6) then
 			if BrewTablebeenInteracted == false then
 				isBrewScene = true
 				BrewTablebeenInteracted = true
@@ -861,9 +858,12 @@ end
 
 function PostMove()
 	for i = 1, #posts do
-		if posts[i].moveSteps <= posts[i].postDistance and posts[i].dropped == true then
+		if posts[i].moveSteps <= posts[i].postDistance.x and posts[i].dropped == true then
 			posts[i].moveSteps = posts[i].moveSteps + 1
-			posts[i].x = posts[i].x - 5
+			if posts[i].moveSteps <= posts[i].postDistance.y then
+				posts[i].y = posts[i].y - 3
+			end
+			posts[i].x = posts[i].x - 3
 		end
 	end
 end
@@ -878,7 +878,9 @@ function SpitPost()
 			posts[a].y = postDoor.y + 6
 			posts[a].dropped = true
 			posts[a].collected = false
-			posts[a].postDistance = math.random(5, 30)
+			posts[a].postDistance.x = math.random(9, 60)
+			posts[a].postDistance.y = math.random(0, 10)
+			posts[a].moveSteps = 0
 			AddToBar(hWBar, houseworkcost)
 			break
 		end
@@ -896,8 +898,31 @@ function CreateWashingUp()
 			sink.hasSpit = false
 		end
 	end
-end
 
+	if timer % 20 == 0 then
+		for i = 1, #washingUp do
+			if washingUp[i].collected == true then
+				washingUp[i].collected = false
+				washingUp[i].dropped = false
+				washingUp[i].x = 240 // 2
+				washingUp[i].y = 140
+				washingUp[i].moveSteps = 0
+				washingUp[i].sprite = math.random(51, 52)
+			end
+		end
+	end
+end
+function WashingUpMove()
+	for i = 1, #washingUp do
+		if washingUp[i].moveSteps <= washingUp[i].postDistance.x and washingUp[i].dropped == true then
+			washingUp[i].moveSteps = washingUp[i].moveSteps + 1
+			if washingUp[i].moveSteps <= washingUp[i].postDistance.y then
+				washingUp[i].y = washingUp[i].y + 2
+			end
+			washingUp[i].x = washingUp[i].x + 2
+		end
+	end
+end
 function SpitWashingUp()
 	local a = 0
 	while (a < #washingUp) do
@@ -908,6 +933,9 @@ function SpitWashingUp()
 			washingUp[a].y = sink.y + 2 + math.random(8)
 			washingUp[a].dropped = true
 			washingUp[a].collected = false
+			washingUp[a].postDistance.x = math.random(5 * 2, 38 * 2)
+			washingUp[a].postDistance.y = math.random(1, 5 * 2)
+			washingUp[a].moveSteps = 0
 			AddToBar(hWBar, houseworkcost)
 			break
 		end
@@ -1054,7 +1082,6 @@ function BrewProgress(_timer)
 			finishGame = true
 			if WindowDelay(4) then
 				toBrewScene = true
-				
 			end
 		end
 		return
@@ -1145,7 +1172,7 @@ function MainGameLoop()
 	DrawDoor()
 	DrawWMachine()
 	PostMove()
-
+	WashingUpMove()
 	if interactPrompt == true then InteractPrompt() end
 
 	for i = 1, #laundrys do
@@ -1199,10 +1226,10 @@ function MainGameLoop()
 	else
 		interactPrompt = false
 	end
-	
-	
-	
-	
+
+
+
+
 	--- if game is won ------
 	if toBrewScene == true then
 		mgr:active("end")
@@ -1895,4 +1922,3 @@ end
 -- <PALETTE2>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE2>
-
