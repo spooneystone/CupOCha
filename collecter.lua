@@ -182,7 +182,16 @@ local workTop = {
 -- collecteable house items
 local washingUp = {}
 for i = 1, 8 do
-	local wUp = { sprite = math.random(51, 52), x = 240 // 2, y = 140, collected = false, dropped = false, iswork = true,moveSteps= 0, postDistance = { x = math.random(5, 38), y = math.random(1, 5) }}
+	local wUp = {
+		sprite = math.random(51, 52),
+		x = 240 // 2,
+		y = 140,
+		collected = false,
+		dropped = false,
+		iswork = true,
+		moveSteps = 0,
+		postDistance = { x = math.random(5, 38), y = math.random(1, 5) }
+	}
 	table.insert(washingUp, wUp)
 end
 local laundrys = {}
@@ -488,6 +497,7 @@ end
 
 --#endregion
 --#region BAR FUNCTIONS
+
 ---Skill fill bar ---------------------------------------------------------
 function SkillBar()
 	rectb(skillBarPos.centre.x - skillCheckBar.barWidth // 2, skillBarPos.centre.y - 20, skillCheckBar.barWidth, 6, 12)
@@ -538,10 +548,58 @@ function DrawBarFill(_Bar, _color, _xloc, _yloc)
 	rect(_xloc, _yloc, _Bar.currentFillValue, _Bar.fillThickness, _color)
 end
 
+--#endregion--#region PLAYER FUNCTIONS
+--#region PARTICLES AND ANIM
+
+function DrawParticles(_px, _py)
+	if btn(2) then
+		local sPoint = { x = _px + 7, y = _py + 7 }
+		for i = 0, 3, 1 do
+			if i == 3 then i = 4 end
+			pix(sPoint.x + i, sPoint.y, 12)
+			pix(sPoint.x + i, sPoint.y - 7, 12)
+			if i < 2 then
+				pix(sPoint.x + i + 1, sPoint.y - 4, 12)
+			end
+		end
+	elseif btn(3) then
+		local sPoint = { x = _px - 1, y = _py + 7 }
+		for i = 0, 3, 1 do
+			if i == 3 then i = 4 end
+			pix(sPoint.x - i, sPoint.y, 12)
+			pix(sPoint.x - i, sPoint.y - 7, 12)
+			if i < 2 then
+				pix(sPoint.x - i - 1, sPoint.y - 4, 12)
+			end
+		end
+	elseif btn(0) then
+		local sPoint = { x = _px, y = _py + 6 }
+		for i = 0, 3, 1 do
+			if i == 3 then i = 4 end
+			pix(sPoint.x, sPoint.y + i, 12)
+			pix(sPoint.x + 7, sPoint.y + i, 12)
+			if i < 2 then
+				pix(sPoint.x + 4, sPoint.y + i + 1, 12)
+			end
+		end
+	elseif btn(1) then
+		local sPoint = { x = _px, y = _py - 1 }
+		for i = 0, 3, 1 do
+			if i == 3 then i = 4 end
+			pix(sPoint.x, sPoint.y - i, 12)
+			pix(sPoint.x + 7, sPoint.y - i, 12)
+			if i < 2 then
+				pix(sPoint.x + 3, sPoint.y - i - 1, 12)
+			end
+		end
+	end
+end
+
 --#endregion
 --#region PLAYER FUNCTIONS
 
 --- Player Functions-----------------------------------------------------
+
 function DrawPlayer()
 	if btn(2) then
 		spr(player.sprite, player.x, player.y, 0, 1, 1)
@@ -597,6 +655,7 @@ function Dash()
 			player.s = 3
 			player.dashTimer = player.dashTimer + 1
 			player.dashDelayT = 0
+			DrawParticles(player.x, player.y)
 			if player.dashTimer < 2 then MinusBar(dashBar, 30) end
 		else
 			player.s = 1
@@ -608,6 +667,7 @@ function Dash()
 		end
 	end
 end
+
 
 function AttemptPickUp(obj)
 	if Collision(player.x, player.y, 8, obj.x, obj.y, 8, 8) then
@@ -792,6 +852,7 @@ end
 
 --#endregion
 --#region WASHING MACHINE FUNCTIONS
+
 ---Washing machine functions------------------------------------------------------
 function WMachineFire()
 	-- fires out laundry at every spittime
@@ -833,6 +894,7 @@ end
 
 --#endregion
 --#region POST FUNCTIONS
+
 --Post functions ----------------------------------------------------------------------
 function PostFire()
 	if hWBar.isfull == false then
@@ -889,6 +951,7 @@ end
 
 --#endregion
 --#region SINK FUNCTIONS
+
 ------------Sink functions -----------------------------------------------------------------------------
 function CreateWashingUp()
 	if hWBar.isfull == false then
@@ -912,6 +975,7 @@ function CreateWashingUp()
 		end
 	end
 end
+
 function WashingUpMove()
 	for i = 1, #washingUp do
 		if washingUp[i].moveSteps <= washingUp[i].postDistance.x and washingUp[i].dropped == true then
@@ -923,6 +987,7 @@ function WashingUpMove()
 		end
 	end
 end
+
 function SpitWashingUp()
 	local a = 0
 	while (a < #washingUp) do
@@ -1138,7 +1203,6 @@ function MainGameLoop()
 	t = t + 1
 	PlayerMove()
 	Timer()
-
 	for i = 1, #laundrys do
 		Collect(laundrys[i])
 	end
