@@ -81,7 +81,9 @@ local skillBar = {
 		y = { skillBarPos.centre.y - 8, skillBarPos.centre.y - 5, skillBarPos.centre.y, skillBarPos.centre.y + 5,
 			skillBarPos.centre.y + 8, skillBarPos.centre.y + 5, skillBarPos.centre.y, skillBarPos.centre.y - 5 }
 	},
-	successCheckstep = 0
+	successCheckstep = 0,
+	success = false,
+	fail = false
 }
 local skillSlider = {
 	vec = {
@@ -452,56 +454,100 @@ end
 function SuccessCheck()
 	-- check if skill check is in box area for success check
 
-	if skillBar.successCheckstep < 5 then
-		if skillBoxesPos.selecXpos == SkillBarStep then
-			-- button press here for win check
-			if btnp(4) then
-				skillBoxesPos.posbeenSelected = false;
-				skillBar.successCheckstep = skillBar.successCheckstep + 1
-				if skillBar.successCheckstep > 5 then skillBar.successCheckstep = 5 end
+		if skillBar.successCheckstep < 5 then
+			if skillBoxesPos.selecXpos == SkillBarStep then
+				-- button press here for win check
+				if btnp(4) then
+					skillBar.success = true;
+					skillBoxesPos.posbeenSelected = false;
+					skillBar.successCheckstep = skillBar.successCheckstep + 1
+					if skillBar.successCheckstep > 5 then skillBar.successCheckstep = 5 end
+				end
+				--print("YES", 240 // 2, 136 // 2, 4, 0, 3)
+			else
+				if btnp(4) then
+					skillBar.fail = true;
+					skillBoxesPos.posbeenSelected = false;
+					skillBar.successCheckstep = skillBar.successCheckstep - 1
+					if skillBar.successCheckstep < 0 then skillBar.successCheckstep = 0 end
+				end
+				--print("NO", 240 // 2, 136 // 2, 4, 0, 1)
 			end
-			--print("YES", 240 // 2, 136 // 2, 4, 0, 3)
-		else
-			if btnp(4) then
-				skillBoxesPos.posbeenSelected = false;
-				skillBar.successCheckstep = skillBar.successCheckstep - 1
-				if skillBar.successCheckstep < 0 then skillBar.successCheckstep = 0 end
-			end
-			--print("NO", 240 // 2, 136 // 2, 4, 0, 1)
 		end
-	end
 end
 
 function SuccessCheckSlider()
 	-- check if skill check is in box area for success check
 
-	if skillSlider.successCheckstep < 5 then
-		if skillSliderBoxesPos.selecXpos == SkillBarStep then
-			-- button press here for win check
-			if btnp(4) then
-				skillSliderBoxesPos.posbeenSelected = false;
-				skillSlider.successCheckstep = skillSlider.successCheckstep + 1
-				if skillSlider.successCheckstep > 5 then skillSlider.successCheckstep = 5 end
+		if skillSlider.successCheckstep < 5 then
+			if skillSliderBoxesPos.selecXpos == SkillBarStep then
+				-- button press here for win check
+				if btnp(4) then
+					skillBar.success = true;
+					skillSliderBoxesPos.posbeenSelected = false;
+					skillSlider.successCheckstep = skillSlider.successCheckstep + 1
+					if skillSlider.successCheckstep > 5 then skillSlider.successCheckstep = 5 end
+				end
+				--print("YES", 240 // 2, 136 // 2, 4, 0, 3)
+			else
+				if btnp(4) then
+					skillBar.fail = true;
+					skillSliderBoxesPos.posbeenSelected = false;
+					skillSlider.successCheckstep = skillSlider.successCheckstep - 1
+					if skillSlider.successCheckstep < 0 then skillSlider.successCheckstep = 0 end
+				end
+				--print("NO", 240 // 2, 136 // 2, 4, 0, 1)
 			end
-			--print("YES", 240 // 2, 136 // 2, 4, 0, 3)
-		else
-			if btnp(4) then
-				skillSliderBoxesPos.posbeenSelected = false;
-				skillSlider.successCheckstep = skillSlider.successCheckstep - 1
-				if skillSlider.successCheckstep < 0 then skillSlider.successCheckstep = 0 end
-			end
-			--print("NO", 240 // 2, 136 // 2, 4, 0, 1)
 		end
-	end
 end
 
 --#endregion
 --#region BAR FUNCTIONS
 
 ---Skill fill bar ---------------------------------------------------------
+local BarJoltDelayTimer = 0
 function SkillBar()
-	rectb(skillBarPos.centre.x - skillCheckBar.barWidth // 2, skillBarPos.centre.y - 20, skillCheckBar.barWidth, 6, 12)
-	DrawBarFill(skillCheckBar, 6, skillBarPos.centre.x - skillCheckBar.barWidth // 2 + 1, skillBarPos.centre.y - 20 + 1)
+	if skillBar.success == true then
+		BarJoltDelayTimer = BarJoltDelayTimer + 1
+		--makes bar flash green and move up
+		rectb(skillBarPos.centre.x - skillCheckBar.barWidth // 2, skillBarPos.centre.y - 20 - 4, skillCheckBar.barWidth,
+			6, 12)
+
+		if BarJoltDelayTimer / 60 % 0.1 == 0.0 then
+			DrawBarFill(skillCheckBar, 6, skillBarPos.centre.x - skillCheckBar.barWidth // 2 + 1,
+				skillBarPos.centre.y - 20 + 1 - 4)
+		else
+			DrawBarFill(skillCheckBar, 5, skillBarPos.centre.x - skillCheckBar.barWidth // 2 + 1,
+				skillBarPos.centre.y - 20 + 1 - 4)
+		end
+
+		if BarJoltDelayTimer / 60 % 0.3 == 0.0 then
+			skillBar.success = false
+		end
+	elseif skillBar.fail == true then
+		BarJoltDelayTimer = BarJoltDelayTimer + 1
+
+		-- makes the bar flash red when fail and move down
+		if BarJoltDelayTimer / 60 % 0.2 == 0.0 then
+			rectb(skillBarPos.centre.x - skillCheckBar.barWidth // 2, skillBarPos.centre.y - 20 + 4,
+				skillCheckBar.barWidth, 6, 12)
+		else
+			rectb(skillBarPos.centre.x - skillCheckBar.barWidth // 2, skillBarPos.centre.y - 20 + 4,
+				skillCheckBar.barWidth, 6, 2)
+		end
+		-- turns fill bar area red
+		DrawBarFill(skillCheckBar, 2, skillBarPos.centre.x - skillCheckBar.barWidth // 2 + 1,
+			skillBarPos.centre.y - 20 + 1 + 4)
+		if BarJoltDelayTimer / 60 % 0.6 == 0.0 then
+			skillBar.fail = false
+		end
+	else
+		BarJoltDelayTimer = 0
+		rectb(skillBarPos.centre.x - skillCheckBar.barWidth // 2, skillBarPos.centre.y - 20, skillCheckBar.barWidth, 6,
+			12)
+		DrawBarFill(skillCheckBar, 6, skillBarPos.centre.x - skillCheckBar.barWidth // 2 + 1,
+			skillBarPos.centre.y - 20 + 1)
+	end
 end
 
 -- Dash bar-----------------------------------------------------------------
@@ -809,17 +855,27 @@ end
 function DrawObj(sprite, posX, posY, w, h)
 	spr(sprite, posX, posY, 0, 1, 0, 0, w, h)
 end
-
+function ShakeDraw(time,shakeS,sprite, posX, posY, w, h)
+	if t / 60 % time >= 0 and t / 60 % time <= 0.5 then
+		if t / 60 % shakeS >= 0 and t / 60 % shakeS <= shakeS / 2 then
+			DrawObj(sprite, posX - 1, posY, w, h)
+		else
+			DrawObj(sprite, posX  + 1, posY, w, h)
+		end
+	else
+		DrawObj(sprite, posX, posY, w, h)
+	end
+end
 function DrawTeaBag()
-	DrawObj(teabag.sprite, teabag.x, teabag.y, 1, 1)
+	ShakeDraw(5,0.125,teabag.sprite, teabag.x - 1, teabag.y, 1, 1)
 end
 
 function DrawKettle()
-	DrawObj(kettle.sprite, kettle.x, kettle.y, 1, 1)
+	ShakeDraw(5,0.125,kettle.sprite, kettle.x, kettle.y, 1, 1)
 end
 
 function DrawCup()
-	DrawObj(cup.sprite, cup.x, cup.y, 1, 1)
+	ShakeDraw(5,0.125,cup.sprite, cup.x, cup.y, 1, 1)
 end
 
 function DrawWMachine()
@@ -1986,3 +2042,4 @@ end
 -- <PALETTE2>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE2>
+
