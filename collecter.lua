@@ -127,9 +127,25 @@ local hWBar = { barWidth = 32, fillThickness = 4, currentFillValue = 0, maxValue
 local player = { sprite = 1, x = 240 // 2, y = 139 // 2, s = 1, dashTimer = 0, dashDelayT = 0, objHolding = nil }
 --tea items
 
-local teabag = { sprite = 17, x = 240 // 3, y = 140 // 2, collected = false, iswork = false, cutscenespr = 320 }
-local kettle = { sprite = 18, x = 240 // 4, y = 140 // 4, collected = false, iswork = false, cutscenespr = 328 }
-local cup = { sprite = 19, x = 240 // 8, y = 140 // 8, collected = false, iswork = false, cutscenespr = 324 }
+local teabag = {
+	sprite = 17,
+	x = 240 // 3,
+	y = 140,
+	collected = false,
+	iswork = false,
+	cutscenespr = 320,
+	see = false
+}
+local kettle = {
+	sprite = 18,
+	x = 240 // 4,
+	y = 140,
+	collected = false,
+	iswork = false,
+	cutscenespr = 328,
+	see = false
+}
+local cup = { sprite = 19, x = 240 // 8, y = 140, collected = false, iswork = false, cutscenespr = 324, see = false }
 
 --root houswork items
 local wMachine = {
@@ -179,6 +195,11 @@ local workTop = {
 	pixsizeX = 32,
 	pixsizeY = 16
 }
+local boxes = {}
+for i = 1, 4 do
+	local box = { sprite = 161, x = 240 / 2 + 10 * i, y = 140 / 2, isDestroyed = false, animeTimer = 0 }
+	table.insert(boxes, box)
+end
 
 --- insert tables
 -- collecteable house items
@@ -271,6 +292,22 @@ function SkillCheckMultiplyer()
 	end
 end
 
+function BoxesSpawn()
+	for i = 1, #boxes do
+		local rX = math.random(30, 210)
+		local rY = math.random(30, 110)
+		boxes[i].isDestroyed = false
+		boxes[i].x = rX
+		boxes[i].y = rY
+	end
+end
+
+function SpawnInTeaItem(teaItem)
+	local r = math.random(1, #boxes)
+	teaItem.x = boxes[r].x
+	teaItem.y = boxes[r].y
+end
+
 function ResetGame()
 	brewingStage = 0
 	houseworkcost = 3
@@ -282,17 +319,25 @@ function ResetGame()
 	toBrewScene = false
 	t = 0
 	timer = 0
+	for i = 1, #boxes do
+		boxes[i].isDestroyed = false
+	end
 	teabag.collected = false
 	kettle.collected = false
 	cup.collected = false
-	teabag.x = 240 // 3
-	teabag.y = 140 // 2
-	kettle.x = 240 // 4
-	kettle.y = 140 // 4
-	cup.x = 240 // 8
-	cup.y = 140 // 8
+	teabag.see = false
+	kettle.see = false
+	cup.see = false
+	teabag.x = 240
+	teabag.y = 140
+	kettle.x = 240
+	kettle.y = 140
+	cup.x = 240
+	cup.y = 140
 	player.x = 240 // 2
 	player.y = 139 // 2
+	BoxesSpawn()
+	SpawnInTeaItem(teabag)
 end
 
 --#endregion
@@ -454,51 +499,51 @@ end
 function SuccessCheck()
 	-- check if skill check is in box area for success check
 
-		if skillBar.successCheckstep < 5 then
-			if skillBoxesPos.selecXpos == SkillBarStep then
-				-- button press here for win check
-				if btnp(4) then
-					skillBar.success = true;
-					skillBoxesPos.posbeenSelected = false;
-					skillBar.successCheckstep = skillBar.successCheckstep + 1
-					if skillBar.successCheckstep > 5 then skillBar.successCheckstep = 5 end
-				end
-				--print("YES", 240 // 2, 136 // 2, 4, 0, 3)
-			else
-				if btnp(4) then
-					skillBar.fail = true;
-					skillBoxesPos.posbeenSelected = false;
-					skillBar.successCheckstep = skillBar.successCheckstep - 1
-					if skillBar.successCheckstep < 0 then skillBar.successCheckstep = 0 end
-				end
-				--print("NO", 240 // 2, 136 // 2, 4, 0, 1)
+	if skillBar.successCheckstep < 5 then
+		if skillBoxesPos.selecXpos == SkillBarStep then
+			-- button press here for win check
+			if btnp(4) then
+				skillBar.success = true;
+				skillBoxesPos.posbeenSelected = false;
+				skillBar.successCheckstep = skillBar.successCheckstep + 1
+				if skillBar.successCheckstep > 5 then skillBar.successCheckstep = 5 end
 			end
+			--print("YES", 240 // 2, 136 // 2, 4, 0, 3)
+		else
+			if btnp(4) then
+				skillBar.fail = true;
+				skillBoxesPos.posbeenSelected = false;
+				skillBar.successCheckstep = skillBar.successCheckstep - 1
+				if skillBar.successCheckstep < 0 then skillBar.successCheckstep = 0 end
+			end
+			--print("NO", 240 // 2, 136 // 2, 4, 0, 1)
 		end
+	end
 end
 
 function SuccessCheckSlider()
 	-- check if skill check is in box area for success check
 
-		if skillSlider.successCheckstep < 5 then
-			if skillSliderBoxesPos.selecXpos == SkillBarStep then
-				-- button press here for win check
-				if btnp(4) then
-					skillBar.success = true;
-					skillSliderBoxesPos.posbeenSelected = false;
-					skillSlider.successCheckstep = skillSlider.successCheckstep + 1
-					if skillSlider.successCheckstep > 5 then skillSlider.successCheckstep = 5 end
-				end
-				--print("YES", 240 // 2, 136 // 2, 4, 0, 3)
-			else
-				if btnp(4) then
-					skillBar.fail = true;
-					skillSliderBoxesPos.posbeenSelected = false;
-					skillSlider.successCheckstep = skillSlider.successCheckstep - 1
-					if skillSlider.successCheckstep < 0 then skillSlider.successCheckstep = 0 end
-				end
-				--print("NO", 240 // 2, 136 // 2, 4, 0, 1)
+	if skillSlider.successCheckstep < 5 then
+		if skillSliderBoxesPos.selecXpos == SkillBarStep then
+			-- button press here for win check
+			if btnp(4) then
+				skillBar.success = true;
+				skillSliderBoxesPos.posbeenSelected = false;
+				skillSlider.successCheckstep = skillSlider.successCheckstep + 1
+				if skillSlider.successCheckstep > 5 then skillSlider.successCheckstep = 5 end
 			end
+			--print("YES", 240 // 2, 136 // 2, 4, 0, 3)
+		else
+			if btnp(4) then
+				skillBar.fail = true;
+				skillSliderBoxesPos.posbeenSelected = false;
+				skillSlider.successCheckstep = skillSlider.successCheckstep - 1
+				if skillSlider.successCheckstep < 0 then skillSlider.successCheckstep = 0 end
+			end
+			--print("NO", 240 // 2, 136 // 2, 4, 0, 1)
 		end
+	end
 end
 
 --#endregion
@@ -648,11 +693,45 @@ end
 
 function DrawPlayer()
 	if btn(2) then
-		spr(player.sprite, player.x, player.y, 0, 1, 1)
+		if t // 6 % 4 == 0 then
+			spr(player.sprite + 3, player.x, player.y, 0, 1, 1)
+		elseif t // 6 % 4 == 1 then
+			spr(player.sprite, player.x, player.y, 0, 1, 1)
+		elseif t // 6 % 4 == 2 then
+			spr(player.sprite + 5, player.x, player.y, 0, 1, 1)
+		elseif t // 6 % 4 == 3 then
+			spr(player.sprite, player.x, player.y, 0, 1, 1)
+		end
 	elseif btn(3) then
-		spr(player.sprite, player.x, player.y, 0)
+		if t // 6 % 4 == 0 then
+			spr(player.sprite + 3, player.x, player.y, 0)
+		elseif t // 6 % 4 == 1 then
+			spr(player.sprite, player.x, player.y, 0)
+		elseif t // 6 % 4 == 2 then
+			spr(player.sprite + 5, player.x, player.y, 0)
+		elseif t // 6 % 4 == 3 then
+			spr(player.sprite, player.x, player.y, 0)
+		end
 	elseif btn(0) then
-		spr(player.sprite + 2, player.x, player.y, 0)
+		if t // 6 % 4 == 0 then
+			spr(player.sprite + 8, player.x, player.y, 0)
+		elseif t // 6 % 4 == 1 then
+			spr(player.sprite + 2, player.x, player.y, 0)
+		elseif t // 6 % 4 == 2 then
+			spr(player.sprite + 9, player.x, player.y, 0)
+		elseif t // 6 % 4 == 3 then
+			spr(player.sprite + 2, player.x, player.y, 0)
+		end
+	elseif btn(1) then
+		if t // 6 % 4 == 0 then
+			spr(player.sprite + 7, player.x, player.y, 0)
+		elseif t // 6 % 4 == 1 then
+			spr(player.sprite + 1, player.x, player.y, 0)
+		elseif t // 6 % 4 == 2 then
+			spr(player.sprite + 6, player.x, player.y, 0)
+		elseif t // 6 % 4 == 3 then
+			spr(player.sprite + 1, player.x, player.y, 0)
+		end
 	else
 		spr(player.sprite + 1, player.x, player.y, 0)
 	end
@@ -714,7 +793,6 @@ function Dash()
 	end
 end
 
-
 function AttemptPickUp(obj)
 	if Collision(player.x, player.y, 8, obj.x, obj.y, 8, 8) then
 		if btnp(4, 60, 6) then
@@ -738,7 +816,32 @@ end
 function Collect(obj)
 	if Collision(player.x, player.y, 8, obj.x, obj.y, 8, 8) then
 		obj.collected = true
-		if obj.iswork == true then MinusBar(hWBar, houseworkcost) end
+		if obj.iswork == true then
+			MinusBar(hWBar, houseworkcost)
+		else
+			local t = { teabag, kettle, cup }
+			for i = 1, #t do
+				if t[i].collected == false then
+					BoxesSpawn()
+					SpawnInTeaItem(t[i])
+					break
+				end
+			end
+		end
+	end
+end
+
+function DestroyBox(box)
+	local t = { teabag, kettle, cup }
+
+	if Collision(player.x, player.y, 8, box.x, box.y, 8, 8) then
+		-- if tea item is inside then it will draw the item
+		for i = 1, #t do
+			if box.x == t[i].x and box.y == t[i].y then
+				t[i].see = true
+			end
+		end
+		box.isDestroyed = true
 	end
 end
 
@@ -777,6 +880,23 @@ function ObjMove(obj)
 	--if hits an static obj
 	for i = 1, #staticObjs do
 		if HitItemWhileMoving(obj, staticObjs[i], staticObjs[i].pixsizeX, staticObjs[i].pixsizeY) then
+			if obj.mDown == true then
+				obj.mDown = false
+			else
+				obj.mDown = true
+				break
+			end
+			if obj.mLeft == true then
+				obj.mLeft = false
+			else
+				obj.mLeft = true
+				break
+			end
+		end
+	end
+	-- if it hits a box
+	for i = 1, #boxes do
+		if HitItemWhileMoving(obj, boxes[i], 8, 8) then
 			if obj.mDown == true then
 				obj.mDown = false
 			else
@@ -855,27 +975,58 @@ end
 function DrawObj(sprite, posX, posY, w, h)
 	spr(sprite, posX, posY, 0, 1, 0, 0, w, h)
 end
-function ShakeDraw(time,shakeS,sprite, posX, posY, w, h)
+
+function ShakeDraw(time, shakeS, sprite, posX, posY, w, h)
 	if t / 60 % time >= 0 and t / 60 % time <= 0.5 then
 		if t / 60 % shakeS >= 0 and t / 60 % shakeS <= shakeS / 2 then
 			DrawObj(sprite, posX - 1, posY, w, h)
 		else
-			DrawObj(sprite, posX  + 1, posY, w, h)
+			DrawObj(sprite, posX + 1, posY, w, h)
 		end
 	else
 		DrawObj(sprite, posX, posY, w, h)
 	end
 end
 function DrawTeaBag()
-	ShakeDraw(5,0.125,teabag.sprite, teabag.x - 1, teabag.y, 1, 1)
+	if teabag.see == true then
+		ShakeDraw(5, 0.125, teabag.sprite, teabag.x, teabag.y, 1, 1)
+	end
 end
 
 function DrawKettle()
-	ShakeDraw(5,0.125,kettle.sprite, kettle.x, kettle.y, 1, 1)
+	if kettle.see == true then
+		ShakeDraw(5, 0.125, kettle.sprite, kettle.x, kettle.y, 1, 1)
+	end
 end
 
 function DrawCup()
-	ShakeDraw(5,0.125,cup.sprite, cup.x, cup.y, 1, 1)
+	if cup.see == true then
+		ShakeDraw(5, 0.125, cup.sprite, cup.x, cup.y, 1, 1)
+	end
+end
+
+function DrawBox(index)
+	if boxes[index].isDestroyed == false then
+		DrawObj(boxes[index].sprite, boxes[index].x, boxes[index].y, 1, 1)
+		--ShakeDraw(.1, 0.125, boxes[index].sprite, boxes[index].x, boxes[index].y, 1, 1)
+	else
+		if boxes[index].animeTimer <= 1 then
+			ShakeDraw(.1, 0.125, boxes[index].sprite + 1, boxes[index].x, boxes[index].y, 1, 1)
+			--DrawObj(boxes[index].sprite + 1, boxes[index].x, boxes[index].y, 1, 1)
+		elseif boxes[index].animeTimer >= 1 and boxes[index].animeTimer <= 2 then
+			ShakeDraw(.1, 0.125, boxes[index].sprite + 2, boxes[index].x, boxes[index].y, 1, 1)
+			--DrawObj(boxes[index].sprite + 2, boxes[index].x, boxes[index].y, 1, 1)
+		elseif boxes[index].animeTimer >= 2 and boxes[index].animeTimer <= 3 then
+			ShakeDraw(.1, 0.125, boxes[index].sprite + 3, boxes[index].x, boxes[index].y, 1, 1)
+			--DrawObj(boxes[index].sprite + 3, boxes[index].x, boxes[index].y, 1, 1)
+		elseif boxes[index].animeTimer >= 4 then
+			boxes[index].x = 240
+			boxes[index].y = 140
+			boxes[index].animeTimer = 0
+			boxes[index].isDestroyed = false
+		end
+		boxes[index].animeTimer = boxes[index].animeTimer + .1666666
+	end
 end
 
 function DrawWMachine()
@@ -904,6 +1055,8 @@ end
 
 function DrawWorkTop()
 	DrawObj(workTop.sprite, workTop.x, workTop.y, 4, 2)
+	spr(145, workTop.x, workTop.y + 16, 0, 1, 0, 0, 1, 1)
+	spr(145, workTop.x + 24, workTop.y + 16, 0, 1, 1, 0, 1, 1)
 end
 
 --#endregion
@@ -1294,7 +1447,10 @@ function MainGameLoop()
 	PostMove()
 	WashingUpMove()
 	if interactPrompt == true then InteractPrompt() end
-
+	for i = 1, #boxes do
+		DrawBox(i)
+		DestroyBox(boxes[i])
+	end
 	for i = 1, #laundrys do
 		if laundrys[i].collected == false then
 			DrawLaundry(i)
@@ -1358,7 +1514,7 @@ function MainGameLoop()
 	--print(cutWindowOpenTime // 60, 20, 20, 3)
 end
 
---#endregio
+--#endregion
 --#region SCENES
 
 
@@ -1555,10 +1711,17 @@ end
 ------------------------------------------------------------------------------------------
 
 --#region TILES, SPRITES, MAP AND SOUND DATA USED BY TIC-80
+
 -- <TILES>
 -- 001:00eeee000e4444000e4c4c0004444400034443004033304000eee00000e0e000
 -- 002:0eeeee000444440004c4c40004444400034443004033304000eee00000e0e000
 -- 003:00eee0000eeeee000eeeee0004eee400033333004033304000eee00000e0e000
+-- 004:00eeee000e4444000e4c4c0004444400434443000033300000eee40000e00e00
+-- 006:00eeee000e4444000e4c4c0004444400034443400033300004eee0000e00e000
+-- 007:0eeeee000444440004c4c40004444400434443000033300000eee40000e00000
+-- 008:00eeeee000444440004c4c40004444400034443400033300004eee0000000e00
+-- 009:00eee0000eeeee000eeeee0004eee400433333000033300000eee4000000e000
+-- 010:000eee0000eeeee000eeeee0004eee400033333400033300004eee00000e0000
 -- 017:0cc00000c00c0000c000ccc0c00c111ccc0c111ccc0c111c000ccccc00000000
 -- 018:0000cc00c00c00c0cc0cccc00cc8888c00c8888c00c8888c000cccc000000000
 -- 019:00000000cccccc00cddddccccddddc0ccddddcc0ccddcc000cccc00000000000
@@ -1576,14 +1739,19 @@ end
 -- 083:000b000000b9b0000bb9bb00bbb9bbb00bb9999b00bbbbb0000bbb000000b000
 -- 097:c2222222c2222222c22eeeeec2222222c2222222c2222222c2222222cccccccc
 -- 098:2ec0000022c0000022c0000022c0000022c0000022c0000022c00000ccc00000
--- 113:ccccccccc3333333c3333333c3333333c3333333c3333333c3333333c3333333
+-- 113:0cccccccc3333333c3333333c3333333c3333333c3333333c3333333c3333333
 -- 114:cccccccc33333333333333333333333333333333333333333333333333333333
 -- 115:cccccccc33333333333333333333333333333333333333333333333333333333
--- 116:cccccccc3333333c3333333c3333333c3333333c3333333c3333333c3333333c
+-- 116:ccccccc03333333c3333333c3333333c3333333c3333333c3333333c3333333c
 -- 129:c3333333c3333333c3333333c3333333c3333333c3333333c3333333cccccccc
 -- 130:33333333333333333333333333333333333333333333333333333333cccccccc
 -- 131:33333333333333333333333333333333333333333333333333333333cccccccc
 -- 132:3333333c3333333c3333333c3333333c3333333c3333333c3333333ccccccccc
+-- 145:c3333c00c3333c00c3333c00c3333c000cccc000000000000000000000000000
+-- 161:9888888988888888888888888888888888888888888888888888888898888889
+-- 162:9880088988808888888808888888088888880888888000888800800898088889
+-- 163:0000000008000080000000000080008888880008888000888800800898088889
+-- 164:0000000000000000000000000000000000000000000000800000800898088889
 -- </TILES>
 
 -- <TILES1>
